@@ -1,8 +1,9 @@
 class Attendee
-  attr_accessor :regdate, :first_name, :last_name, :email_address, :homephone, :street, :city, :state, :zipcode
+  attr_accessor :regdate, :first_name, :last_name, :email_address, :homephone,
+  :street, :city, :state, :zipcode
 
   def initialize(line)
-    self.regdate = line[:regdate]
+    self.regdate = line[:regdate].to_s
     self.first_name = line[:first_name]
     self.last_name = line[:last_name]
     self.email_address = line[:email_address]
@@ -14,7 +15,7 @@ class Attendee
   end
 
   def clean_homephone(homephone)
-    homephone = homephone.scan(/\d/).join
+    homephone = homephone.scan(/\d/).join.to_s
   end
 
   def clean_zipcode(zipcode)

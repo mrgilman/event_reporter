@@ -18,13 +18,14 @@ class EventReporter
       parts = input.split(" ")
       input_parse(parts)
     end
-  end  
+  end
 
   def input_parse(parts)
     case parts[0]
     when 'quit' then exit
+    when 'exit' then exit
     when 'load' then load(parts[1])
-    when 'find' then find(parts[1],parts[2])
+    when 'find' then find(parts[1],parts[2..-1].join(" "))
     when 'queue' then queue(parts[1..-1])
     when 'help' then help(parts[1..-1])
     else help('help')
@@ -35,9 +36,11 @@ class EventReporter
     if filename.nil?
       filename = "event_attendees.csv"
     end
-    @file = CSV.open(filename, {:headers => true, :header_converters => :symbol})
+    options = {:headers => true, :header_converters => :symbol}
+    @file = CSV.open(filename, options)
     load_attendees(@file)
     puts "#{filename} loaded."
+    @queue = []
   end
 
   def load_attendees(file)
@@ -46,11 +49,15 @@ class EventReporter
 
   def find(attribute, criteria)
     @queue = []
-    self.attendees.each do |attendee|
-      if attendee.send(attribute.to_sym).downcase == criteria.downcase
-        @queue << attendee
+    if self.attendees.nil?
+      @queue = []
+    else
+      self.attendees.each do |attendee|
+        if attendee.send(attribute.to_sym).downcase == criteria.downcase
+          @queue << attendee
+        end
       end
-    end 
+    end
   end
 
   def queue(command)
@@ -72,6 +79,12 @@ class EventReporter
       attendee.state,
       attendee.street]
   end
+
+  def attendee_array_csv(attendee)
+    attendee_array_csv = [attendee.regdate, attendee.first_name,
+      attendee.last_name, attendee.email_address, attendee.homephone,
+      attendee.street, attendee.city, attendee.state, attendee.zipcode]
+    end
 
   def print_parse(command)
     if command[0].nil?
@@ -106,9 +119,10 @@ class EventReporter
 
   def save_to_csv(filename)
     output = CSV.open(filename, "w") do |output|
-      output << ["LAST NAME","FIRST NAME","EMAIL","ZIPCODE","CITY","STATE","ADDRESS"]
+      output << [ "regdate", "first_name", "last_name", "email_address", 
+        "homephone", "street", "city", "state", "zipcode" ]
       @queue.each do |attendee|
-        output << attendee_array(attendee)
+        output << attendee_array_csv(attendee)
       end
     end
     puts "Queue saved to #{filename} in current directory."
@@ -127,7 +141,10 @@ class EventReporter
 
   def help(topic)
     if topic[0].nil? || topic == 'help'
-      puts "Available Commands:\n\tload <filename>\n\tfind <attribute> <criteria>\n\tqueue count\n\tqueue clear\n\tqueue print\n\tqueue print by <attribute>\n\tqueue save to <filename.csv>\n\tquit"
+      printf "Available Commands:\n\tload <filename>\n\tfind <attribute>"
+      printf " <criteria>\n\tqueue count\n\tqueue clear\n\tqueue print\n\t"
+      printf "queue print by <attribute>\n\tqueue save to <filename.csv>\n\t"
+      puts "quit"
     else
       help_topics(topic)
     end
@@ -139,37 +156,52 @@ class EventReporter
     when 'find' then find_help
     when 'queue' then queue_help(topic[1..-1])
     when 'quit' then quit_help
-    else puts "Invalid help topic. Available topics:\n\tload\n\tfind\n\tqueue count\n\tqueue clear\n\tqueue print\n\tqueue print by\n\tqueue save"
+    else invalid_help_topic
     end
   end
 
   def load_help
-    puts "load <filename>: Loads CSV file for report. Default file is event_attendees.csv."
+    printf "load <filename>: Loads CSV file for report. Default file is "
+    puts "event_attendees.csv."
   end
 
   def find_help
-    puts "find <attribute> <criteria>: Finds records matching criteria for a given attribute.\nSearch results saved to queue.\nValid attributes: last_name  first_name  email  zipcode  city  state  address"
+    printf "find <attribute> <criteria>: Finds records matching criteria for a"
+    printf " given attribute.\nSearch results saved to queue.\nValid "
+    printf "attributes: last_name  first_name  email  zipcode  city  state  "
+    puts "address"
   end
 
   def queue_help(topic)
     topic = topic.join(" ")
     case topic
-    when 'count' then puts "queue count: Counts the number of records in the current queue."
+    when 'count' then printf "queue count: Counts the number of records in "
+      puts "the current queue."
     when 'clear' then puts "queue clear: Empties the current queue."
     when 'print' then queue_print_help(topic)
-    when 'save' then puts "queue save to <filename.csv>: Saves current queue to CSV."
+    when 'save' then printf "queue save to <filename.csv>: Saves current "
+      puts "queue to CSV."
     end
   end
 
   def queue_print_help(topic)
     case topic
-    when 'print' then puts "queue print: Prints current queue in default order."
-    when 'print by' then puts "queue print by <attribute>: Prints current queue in order by specified attribute.\nValid attributes: last_name  first_name  email  zipcode  city  state  address"
+    when 'print' then printf "queue print: Prints current queue in default "
+      puts "order."
+    when 'print by' then printf "queue print by <attribute>: Prints current "
+      printf "queue in order by specified attribute.\nValid attributes: "
+      puts "last_name  first_name  email  zipcode  city  state  address"
     end
   end
 
   def quit_help
     puts "Exits the program."
+  end
+
+  def invalid_help_topic
+    printf "Invalid help topic. Available topics:\n\tload\n\tfind\n\t"
+    printf "queue count\n\tqueue clear\n\tqueue print\n\tqueue print by\n\t"
+    puts "queue save"
   end
 
 end
