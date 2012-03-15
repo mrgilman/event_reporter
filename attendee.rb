@@ -8,7 +8,7 @@ class Attendee
     self.last_name = line[:last_name]
     self.email_address = line[:email_address]
     self.homephone = clean_homephone(line[:homephone])
-    self.street = line[:street]
+    self.street = line[:street].to_s
     self.city = line[:city].to_s
     self.state = line[:state].to_s
     self.zipcode = clean_zipcode(line[:zipcode])

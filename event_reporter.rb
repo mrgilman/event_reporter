@@ -69,15 +69,36 @@ class EventReporter
     end
   end
 
+  def longest(attribute)
+    criteria_array = []
+    self.attendees.each do |attendee|
+      criteria_array << attendee.send(attribute.to_sym)
+    end
+    criteria_array = criteria_array.sort_by{|criteria| criteria.length}
+    length = criteria_array.last.length + 1
+  end
+
+  def header_array
+    header_array =  [
+      "LAST NAME".ljust(longest("last_name")),
+      "FIRST NAME".ljust(longest("first_name")),
+      "EMAIL".ljust(longest("email_address")),
+      "ZIPCODE".ljust(8),
+      "CITY".ljust(longest("city")),
+      "STATE".ljust(6),
+      "ADDRESS".ljust(longest("street"))]
+    header_array = header_array.join
+  end
+
   def attendee_array(attendee)
     attendee_array = [
-      attendee.last_name,
-      attendee.first_name,
-      attendee.email_address,
-      attendee.zipcode,
-      attendee.city,
-      attendee.state,
-      attendee.street]
+      attendee.last_name.ljust(longest("last_name")),
+      attendee.first_name.ljust(longest("first_name")),
+      attendee.email_address.ljust(longest("email_address")),
+      attendee.zipcode.ljust(8),
+      attendee.city.ljust(longest("city")),
+      attendee.state.ljust(6),
+      attendee.street.ljust(longest("street"))]
   end
 
   def attendee_array_csv(attendee)
@@ -97,9 +118,9 @@ class EventReporter
   end
 
   def print(queue)
-    puts "LAST NAME\tFIRST NAME\tEMAIL\tZIPCODE\tCITY\tSTATE\tADDRESS"
+    puts header_array
     queue.each do |attendee|
-      puts attendee_array(attendee).join("\t")
+      puts attendee_array(attendee).join
     end
   end
 
@@ -119,7 +140,7 @@ class EventReporter
 
   def save_to_csv(filename)
     output = CSV.open(filename, "w") do |output|
-      output << [ "regdate", "first_name", "last_name", "email_address", 
+      output << [ "regdate", "first_name", "last_name", "email_address",
         "homephone", "street", "city", "state", "zipcode" ]
       @queue.each do |attendee|
         output << attendee_array_csv(attendee)
