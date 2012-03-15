@@ -1,7 +1,6 @@
 $LOAD_PATH << './'
 require 'csv'
 require 'attendee'
-require 'ap'
 
 class EventReporter
   attr_accessor :attendees
