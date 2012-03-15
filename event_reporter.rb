@@ -69,24 +69,32 @@ class EventReporter
     end
   end
 
-  def longest(attribute)
+  def criteria_array(attribute)
     criteria_array = []
-    self.attendees.each do |attendee|
-      criteria_array << attendee.send(attribute.to_sym)
-    end
+      @queue.each do |attendee|
+        criteria_array << attendee.send(attribute.to_sym)
+      end
     criteria_array = criteria_array.sort_by{|criteria| criteria.length}
-    length = criteria_array.last.length + 1
+  end
+
+  def longest(attribute)
+    length = criteria_array(attribute).last.length + 1
+    if length < attribute.length
+      length = attribute.length + 1
+    else
+      length
+    end
   end
 
   def header_array
     header_array =  [
-      "LAST NAME".ljust(longest("last_name")),
-      "FIRST NAME".ljust(longest("first_name")),
-      "EMAIL".ljust(longest("email_address")),
-      "ZIPCODE".ljust(8),
-      "CITY".ljust(longest("city")),
-      "STATE".ljust(6),
-      "ADDRESS".ljust(longest("street"))]
+      "LAST NAME ".ljust(longest("last_name")),
+      "FIRST NAME ".ljust(longest("first_name")),
+      "EMAIL ".ljust(longest("email_address")),
+      "ZIPCODE ".ljust(8),
+      "CITY ".ljust(longest("city")),
+      "STATE ".ljust(6),
+      "ADDRESS ".ljust(longest("street"))]
     header_array = header_array.join
   end
 
@@ -105,7 +113,7 @@ class EventReporter
     attendee_array_csv = [attendee.regdate, attendee.first_name,
       attendee.last_name, attendee.email_address, attendee.homephone,
       attendee.street, attendee.city, attendee.state, attendee.zipcode]
-    end
+  end
 
   def print_parse(command)
     if command[0].nil?
@@ -118,9 +126,13 @@ class EventReporter
   end
 
   def print(queue)
-    puts header_array
-    queue.each do |attendee|
-      puts attendee_array(attendee).join
+    if queue.count == 0
+      puts "No data."
+    else
+      puts header_array
+      queue.each do |attendee|
+        puts attendee_array(attendee).join
+      end
     end
   end
 
